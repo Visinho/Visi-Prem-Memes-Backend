@@ -1,12 +1,19 @@
 const router = require("express").Router();
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken"); 
 
 // REGISTER
 router.post("/register", async (req, res) => {
+try {
   const { username, email, password } = req.body;
 
-  try {
+  if(!username || !email || !password){
+    res.status(400);
+    throw new Error("All fields are mandatory!")
+}
+
+  
     // Validate password strength using regex
     const passwordRegex =
       /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{6,}$/;
@@ -53,6 +60,33 @@ router.post("/register", async (req, res) => {
 });
 
 //LOGIN
+// router.post("/login", async (req, res) => {
+    
+//     try {
+//         const { email, password } = req.body;
+//         // Find the user
+//         const user = await User.findOne({ email });
+//         if (!user) {
+//             return res.status(404).json({ message: 'User not found.' });
+//         }
+
+//         // Validate password
+//         const validPassword = await bcrypt.compare(password, user.password);
+//         if (!validPassword) {
+//             return res.status(400).json({ message: 'Wrong password.' });
+//         }
+
+//         // Successful login
+//         res.status(200).json(user);
+//     } catch (error) {
+//         console.error('Error during user login:', error);
+//         res.status(500).json({ message: 'An error occurred during login.' });
+//     }
+// });
+
+
+
+// LOGIN
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -69,13 +103,21 @@ router.post("/login", async (req, res) => {
             return res.status(400).json({ message: 'Wrong password.' });
         }
 
-        // Successful login
-        res.status(200).json(user);
+        // Generate JWT
+        const token = jwt.sign({ userId: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+
+        // Send JWT along with user data
+        res.status(200).json({ user, token });
     } catch (error) {
         console.error('Error during user login:', error);
         res.status(500).json({ message: 'An error occurred during login.' });
     }
 });
+
+// ... Other routes ...
+
+module.exports = router;
+
 
 module.exports = router;
 
