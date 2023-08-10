@@ -13,7 +13,6 @@ try {
     throw new Error("All fields are mandatory!")
 }
 
-  
     // Validate password strength using regex
     const passwordRegex =
       /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.*[a-zA-Z]).{6,}$/;
@@ -59,33 +58,6 @@ try {
   }
 });
 
-//LOGIN
-// router.post("/login", async (req, res) => {
-    
-//     try {
-//         const { email, password } = req.body;
-//         // Find the user
-//         const user = await User.findOne({ email });
-//         if (!user) {
-//             return res.status(404).json({ message: 'User not found.' });
-//         }
-
-//         // Validate password
-//         const validPassword = await bcrypt.compare(password, user.password);
-//         if (!validPassword) {
-//             return res.status(400).json({ message: 'Wrong password.' });
-//         }
-
-//         // Successful login
-//         res.status(200).json(user);
-//     } catch (error) {
-//         console.error('Error during user login:', error);
-//         res.status(500).json({ message: 'An error occurred during login.' });
-//     }
-// });
-
-
-
 // LOGIN
 router.post("/login", async (req, res) => {
     const { email, password } = req.body;
@@ -103,20 +75,19 @@ router.post("/login", async (req, res) => {
             return res.status(400).json({ message: 'Wrong password.' });
         }
 
-        // Generate JWT
-        const token = jwt.sign({ userId: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+         // Generate access token
+         const accessToken = jwt.sign({ userId: user._id }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15m" });
+
+         // Generate refresh token
+         const refreshToken = jwt.sign({ userId: user._id }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
 
         // Send JWT along with user data
-        res.status(200).json({ user, token });
+        res.status(200).json({ user, accessToken, refreshToken });
     } catch (error) {
         console.error('Error during user login:', error);
         res.status(500).json({ message: 'An error occurred during login.' });
     }
 });
-
-// ... Other routes ...
-
-module.exports = router;
 
 
 module.exports = router;
