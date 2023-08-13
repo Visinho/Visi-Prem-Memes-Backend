@@ -2,6 +2,7 @@ const router = require("express").Router();
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 
+
 //Update User
 router.put("/:id", async (req, res) => {
     const { userId } = req.body;
@@ -27,7 +28,7 @@ router.put("/:id", async (req, res) => {
       res.status(200).json("Account Updated Successfully!");
     } catch (error) {
       console.error('Error during user account update:', error);
-      res.status(500).json("An error occurred during account update.");
+      res.status(500).json("An error occurred during account update!");
     }
   });
   
@@ -49,7 +50,7 @@ router.delete("/:id", async (req, res) => {
 
       // Check if the user was found and deleted
       if (!deletedUser) {
-        return res.status(404).json("User not found.");
+        return res.status(404).json("User not found!");
       }
   
       // Respond with success message
@@ -60,10 +61,88 @@ router.delete("/:id", async (req, res) => {
     }
   });
 
-//get a user
 
-//follow a user
+//Get Single User
+router.get("/:id", async (req, res) => {
+  const { id } = req.params;
 
-//unfollow a user
+  try {
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found!" });
+    }
+
+    const { password, createdAt, updatedAt, ...other } = user._doc;
+    res.status(200).json(other);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "An error occurred while fetching the user." });
+  }
+});
+
+
+//Follow a User
+router.put("/:id/follow", async (req, res) => {
+  const { userId } = req.body;
+  const { id } = req.params;
+
+  if (userId !== id) {
+    try {
+      // Find the user to follow and the current user
+      const userToFollow = await User.findById(id);
+      const currentUser = await User.findById(userId);
+
+      // Check if the current user is not already following the target user
+      if (!userToFollow.followers.includes(userId)) {
+        // Update the user being followed (add current user to their followers)
+        await userToFollow.updateOne({ $push: { followers: userId } });
+
+        // Update the current user (add target user to their following list)
+        await currentUser.updateOne({ $push: { following: id } });
+
+        res.status(200).json("You are now following this user!");
+      } else {
+        res.status(403).json("You already follow this user!");
+      }
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  } else {
+    res.status(403).json("You cannot follow yourself!");
+  }
+});
+
+
+//Unfollow a User
+router.put("/:id/unfollow", async (req, res) => {
+  const { userId } = req.body;
+  const { id } = req.params;
+
+  if (userId !== id) {
+    try {
+      // Find the user to follow and the current user
+      const userToUnfollow = await User.findById(id);
+      const currentUser = await User.findById(userId);
+
+      // Check if the current user is not already following the target user
+      if (userToUnfollow.followers.includes(userId)) {
+        // Update the user being followed (add current user to their followers)
+        await userToUnfollow.updateOne({ $pull: { followers: userId } });
+
+        // Update the current user (add target user to their following list)
+        await currentUser.updateOne({ $pull: { following: id } });
+
+        res.status(200).json("You have now followed this user!");
+      } else {
+        res.status(403).json("You already unfollow this user!");
+      }
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  } else {
+    res.status(403).json("You cannot unfollow yourself!");
+  }
+});
 
 module.exports = router;
