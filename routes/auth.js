@@ -89,6 +89,21 @@ router.post("/login", async (req, res) => {
     }
 });
 
+// Refresh Token
+router.post('/refresh-token', (req, res) => {
+  const refreshToken = req.body.refreshToken;
+
+  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: 'Invalid refresh token.' });
+    }
+
+    const newAccessToken = jwt.sign({ userId: decoded.userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+    res.json({ accessToken: newAccessToken });
+  });
+});
+
+
 
 module.exports = router;
 
