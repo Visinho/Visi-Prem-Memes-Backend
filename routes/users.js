@@ -62,12 +62,22 @@ router.delete("/:id", async (req, res) => {
   });
 
 
-//Get Single User
-router.get("/:id", async (req, res) => {
-  const { id } = req.params;
+// Get Single User
+router.get("/", async (req, res) => {
+  // const { id } = req.query; // Change this to req.query to match your usage
+  const userId = req.query.userId;
+  const username = req.query.username;
 
   try {
-    const user = await User.findById(id);
+    let user;
+
+    if (userId) {
+      user = await User.findById(userId);
+    } else if (username) {
+      user = await User.findOne({ username: username }); 
+    } else {
+      return res.status(400).json({ message: "You must provide either userId or username." });
+    }
 
     if (!user) {
       return res.status(404).json({ message: "User not found!" });
