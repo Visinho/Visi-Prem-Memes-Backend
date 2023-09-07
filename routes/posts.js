@@ -4,7 +4,7 @@ const User = require("../models/User");
 const validateToken = require("../middlewares/validateToken");
 
 //Create Post
-router.post("/", validateToken, async (req, res) => {
+router.post("/", async (req, res) => {
   const newPost = new Post(req.body);
   try {
     const savedPost = await newPost.save();
@@ -17,7 +17,7 @@ router.post("/", validateToken, async (req, res) => {
 });
 
 //Update Post
-router.put("/:id", validateToken, async (req, res) => {
+router.put("/:id", async (req, res) => {
     try {
       const { id } = req.params;
       const { userId } = req.body;
@@ -41,7 +41,7 @@ router.put("/:id", validateToken, async (req, res) => {
   });
 
   //Delete Post
-router.delete("/:id", validateToken, async (req, res) => {
+router.delete("/:id", async (req, res) => {
     try {
       const { id } = req.params;
       const { userId } = req.body;
@@ -65,7 +65,7 @@ router.delete("/:id", validateToken, async (req, res) => {
   });
 
   //Like or Dislike Post
-  router.put("/:id/like", validateToken, async (req, res) => {
+  router.put("/:id/like", async (req, res) => {
     try {
       const { id } = req.params;
       const { userId } = req.body;
@@ -90,7 +90,7 @@ router.delete("/:id", validateToken, async (req, res) => {
   });
 
   //Get Single Post
-  router.get("/:id", validateToken, async (req, res) => {
+  router.get("/:id", async (req, res) => {
     try {
       const { id } = req.params;
   
@@ -108,7 +108,7 @@ router.delete("/:id", validateToken, async (req, res) => {
   });
 
   //Get All Posts
-  router.get("/", validateToken, async (req, res) => {
+  router.get("/", async (req, res) => {
     try {
       const posts = await Post.find(); 
   
@@ -143,6 +143,25 @@ router.get("/timeline/:userId", async (req, res) => {
       res.status(500).json({ message: "An error occurred while fetching timeline posts." });
     }
   });
+
+  // Get all posts by a particular user
+router.get("/profile/:username", async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const posts = await Post.find({ userId: user._id });
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error("Error fetching user posts:", error);
+    res.status(500).json({ message: "An error occurred while fetching user posts." });
+  }
+});
+
   
   
 
