@@ -5,6 +5,8 @@ const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cors = require("cors");
+const multer = require("multer");
+const path = require('path');
 
 //Routes
 const userRoutes = require("./routes/users");
@@ -29,6 +31,33 @@ mongoose
   app.use(helmet());
   app.use(morgan("common"));
   app.use(cors()); 
+
+
+  //Multer picture upload
+  const storage = multer.diskStorage({
+    destination:(req, file, cb) => {
+      cb(null, "public/images");
+    },
+    filename: (req, file, cb) => {
+      cb(null, file.originalname);
+    },
+  });
+
+  const upload = multer({storage});
+
+  app.use("/images", express.static(path.join(__dirname, "public/images")));
+
+  app.post("/api/upload", upload.single("file"), (req, res) => {
+    try {
+      // Log the uploaded file details
+      console.log(req.file);
+      return res.status(200).json("File uploaded successfully");
+    } catch (error) {
+      // Log and handle the error
+      console.error(error);
+      res.status(500).json("Error uploading file");
+    }
+  });
 
   app.use("/api/users", userRoutes);
   app.use("/api/auth", authRoutes);
